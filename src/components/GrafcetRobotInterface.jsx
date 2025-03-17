@@ -18,7 +18,13 @@ const GrafcetRobotInterface = () => {
   
   // Ref for tracking dragged item
   const dragItem = useRef(null);
-  
+
+  //const [finalCode, setFinalCode] = useState("");
+
+  const send = () =>{
+    console.log(generateCode())
+  }
+
   // State for parameter values
   const [paramValues, setParamValues] = useState({});
 
@@ -36,22 +42,22 @@ const GrafcetRobotInterface = () => {
   const handleDrop = (e) => {
     e.preventDefault();
     if (dragItem.current) {
+      const block = functionBlocks.find(block => block.id === dragItem.current);
       const newStep = {
-        id: `step-${sequence.length + 1}`,
-        type: dragItem.current,
-        ...functionBlocks.find(block => block.id === dragItem.current)
+        stepId: `step-${sequence.length + 1}`, // unique step id
+        blockId: block.id, // original function block id
+        ...block
       };
-      
+
       setSequence([...sequence, newStep]);
-      
-      // Initialize parameter value if needed
+
       if (newStep.hasParameter) {
         setParamValues({
           ...paramValues,
-          [newStep.id]: 0
+          [newStep.stepId]: 0 // use stepId as key
         });
       }
-      
+
       dragItem.current = null;
     }
   };
@@ -97,7 +103,7 @@ const GrafcetRobotInterface = () => {
   const generateCode = () => {
     return sequence.map(step => {
       if (step.hasParameter) {
-        return `${step.label}(${paramValues[step.id] || 0}${step.unit})`;
+        return `${step.label}(${paramValues[step.stepId] || 0}${step.unit})`;
       }
       return `${step.label}()`;
     }).join('\n');
@@ -130,9 +136,14 @@ const GrafcetRobotInterface = () => {
                 }
               </div>
             ))}
+            <button
+                onClick={send}
+                className="bg-blue-900 p-3 rounded shadow border-2 border-blue-100 w-full text-white text-left cursor-pointer hover:bg-blue-800 checked:bg-blue-700">
+              Run
+            </button>
           </div>
         </div>
-        
+
         {/* Grafcet Diagram */}
         <div className="flex-1 p-4 overflow-auto">
           <div 
@@ -200,10 +211,10 @@ const GrafcetRobotInterface = () => {
                             </label>
                             <div className="flex items-center mt-1">
                               <input
-                                type="number"
-                                value={paramValues[step.id] || 0}
-                                onChange={(e) => handleParamChange(step.id, parseFloat(e.target.value))}
-                                className="w-24 p-1 border rounded"
+                                  type="number"
+                                  value={paramValues[step.stepId] || 0}
+                                  onChange={(e) => handleParamChange(step.stepId, parseFloat(e.target.value))}
+                                  className="w-24 p-1 border rounded"
                               />
                               <span className="ml-2">{step.unit}</span>
                             </div>
